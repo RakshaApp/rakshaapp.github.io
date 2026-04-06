@@ -93,6 +93,37 @@ class PoseTrainer {
         this.currentPose = poseDef;
     }
 
+    // Converts relative pose targets {rx, ry} into absolute {x, y} normalised coords
+    // based on the user's own detected body landmarks.
+    _resolveTargets(lms, poseTargets) {
+        // Need at least shoulders and hips to compute reference frame
+        const ls = lms[LM.LEFT_SHOULDER],
+            rs = lms[LM.RIGHT_SHOULDER];
+        const lh = lms[LM.LEFT_HIP],
+            rh = lms[LM.RIGHT_HIP];
+        if (!ls || !rs || !lh || !rh) return null;
+
+        const smx = (ls.x + rs.x) / 2; // shoulder midpoint x
+        const smy = (ls.y + rs.y) / 2; // shoulder midpoint y
+        const hmx = (lh.x + rh.x) / 2;
+        const hmy = (lh.y + rh.y) / 2;
+
+        const halfSW = Math.abs(rs.x - ls.x) / 2; // half shoulder width (x unit)
+        const torsoH = Math.abs(hmy - smy); // torso height (y unit)
+
+        if (halfSW < 0.01 || torsoH < 0.01) return null; // person not visible enough
+
+        const resolved = {};
+        for (const [idxStr, rel] of Object.entries(poseTargets)) {
+            const idx = parseInt(idxStr);
+            resolved[idx] = {
+                x: smx + rel.rx * halfSW,
+                y: smy + rel.ry * torsoH,
+            };
+        }
+        return resolved;
+    }
+
     _onResults(results) {
         if (!this.canvas) return;
         const ctx = this.canvas.getContext('2d');
@@ -109,23 +140,30 @@ class PoseTrainer {
 
         const targets = this.currentPose.targets;
 
-        // Per-landmark accuracy
+        // Resolve relative targets to absolute coords using user's body proportions
+        const resolved = this._resolveTargets(lms, this.currentPose.targets);
+        if (!resolved) return; // can't see enough of the person yet
+
+        // Per-landmark accuracy based on distance to resolved target
         const accuracies = {};
         let totalAcc = 0,
             count = 0;
 
-        for (const [idxStr, target] of Object.entries(targets)) {
+        for (const [idxStr, target] of Object.entries(resolved)) {
             const idx = parseInt(idxStr);
             const lm = lms[idx];
             if (!lm) continue;
-            // Distance in normalized space. Max useful range ~0.18
             const dist = Math.sqrt((lm.x - target.x) ** 2 + (lm.y - target.y) ** 2);
-            const acc = Math.max(0, 1 - dist / 0.16);
-            accuracies[idx] = acc;
+            // Tolerance scaled to body size: 20% of half-shoulder-width
+            const ls = lms[LM.LEFT_SHOULDER],
+                rs = lms[LM.RIGHT_SHOULDER];
+            const halfSW = ls && rs ? Math.abs(rs.x - ls.x) / 2 : 0.08;
+            const tol = halfSW * 1.4; // generous tolerance
+            accuracies[idx] = Math.max(0, 1 - dist / tol);
         }
 
-        // Use only key landmarks for overall accuracy
-        const keyLms = this.currentPose.keyLandmarks || Object.keys(targets).map(Number);
+        // Overall accuracy from key landmarks only
+        const keyLms = this.currentPose.keyLandmarks || Object.keys(resolved).map(Number);
         for (const idx of keyLms) {
             if (accuracies[idx] !== undefined) {
                 totalAcc += accuracies[idx];
@@ -134,21 +172,12 @@ class PoseTrainer {
         }
         const overallAccuracy = count > 0 ? (totalAcc / count) * 100 : 0;
 
-        // Feedback messages
-        const feedbackMessages = this._buildFeedback(lms, targets);
+        const feedbackMessages = this._buildFeedback(lms, resolved);
 
-        // Draw static overlay skeleton (target pose, coloured by how close user is)
-        drawOverlayHuman(ctx, targets, w, h, accuracies);
+        // Draw the user's actual detected skeleton coloured by accuracy
+        drawDynamicOverlay(ctx, lms, w, h, accuracies);
 
-        this.onFrame &&
-            this.onFrame({
-                accuracy: overallAccuracy,
-                feedbackMessages,
-                landmarks: lms,
-                accuracies,
-                // Collect per-landmark feedback for summary
-                allFeedback: feedbackMessages,
-            });
+        this.onFrame && this.onFrame({ accuracy: overallAccuracy, feedbackMessages, accuracies });
     }
 
     _buildFeedback(lms, targets) {

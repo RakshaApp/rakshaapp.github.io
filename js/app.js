@@ -547,19 +547,6 @@ function resetTrainingState() {
     $('#summary-overlay')?.classList.remove('show');
     updateAccRing(0);
     setText('feedback-text', 'Step into frame and face the camera');
-
-    // Immediately draw the static overlay for the current pose
-    // so it's visible before MediaPipe fires its first result
-    const overlay = $('#cam-overlay');
-    const pose = currentPoses()[App.poseIndex];
-    if (overlay && pose) {
-        const cw = overlay.offsetWidth || 640;
-        const ch = overlay.offsetHeight || 480;
-        overlay.width = cw;
-        overlay.height = ch;
-        const ctx = overlay.getContext('2d');
-        drawOverlayHuman(ctx, pose.targets, cw, ch, {});
-    }
 }
 
 function stopTrainer() {

@@ -267,3 +267,82 @@ function drawOverlayHuman(ctx, targets, cw, ch, accuracies) {
 
     drawSkeleton(ctx, lms, cw, ch, colorFn, 0.82);
 }
+
+// ── Dynamic overlay: draws the USER's actual detected skeleton ─
+// lms: raw MediaPipe poseLandmarks array (each has .x .y in 0-1)
+// accuracies: { [lmIdx]: 0-1 }
+// The video element is CSS mirrored (scaleX(-1)) so we mirror x here too.
+function drawDynamicOverlay(ctx, lms, cw, ch, accuracies) {
+    if (!lms || lms.length < 17) return;
+    ctx.clearRect(0, 0, cw, ch);
+
+    // Mirror x to match the CSS-mirrored video
+    const px = (idx) => {
+        const l = lms[idx];
+        return l ? { x: (1 - l.x) * cw, y: l.y * ch } : null;
+    };
+
+    const colorFn = (idx) => {
+        const acc = accuracies && accuracies[idx] !== undefined ? accuracies[idx] : 0.5;
+        return accuracyColor(acc);
+    };
+
+    ctx.save();
+    ctx.globalAlpha = 0.88;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // --- bones ---
+    for (const [a, b] of BONES) {
+        const A = px(a),
+            B = px(b);
+        if (!A || !B) continue;
+        ctx.beginPath();
+        ctx.moveTo(A.x, A.y);
+        ctx.lineTo(B.x, B.y);
+        ctx.strokeStyle = colorFn(a);
+        ctx.lineWidth = boneWidth(a, b, cw);
+        ctx.stroke();
+    }
+
+    // --- joints ---
+    const JOINTS = [
+        LM.LEFT_SHOULDER,
+        LM.RIGHT_SHOULDER,
+        LM.LEFT_ELBOW,
+        LM.RIGHT_ELBOW,
+        LM.LEFT_WRIST,
+        LM.RIGHT_WRIST,
+        LM.LEFT_HIP,
+        LM.RIGHT_HIP,
+        LM.LEFT_KNEE,
+        LM.RIGHT_KNEE,
+        LM.LEFT_ANKLE,
+        LM.RIGHT_ANKLE,
+    ];
+    const jr = Math.max(3, 5 * (cw / 500));
+    for (const idx of JOINTS) {
+        const p = px(idx);
+        if (!p) continue;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, jr, 0, Math.PI * 2);
+        ctx.fillStyle = colorFn(idx);
+        ctx.fill();
+    }
+
+    // --- head ---
+    const nose = px(LM.NOSE);
+    if (nose) {
+        // Use distance between eyes to size the head circle accurately
+        const le = px(LM.LEFT_EAR),
+            re = px(LM.RIGHT_EAR);
+        const hr = le && re ? Math.hypot(re.x - le.x, re.y - le.y) * 0.65 : Math.max(12, 18 * (cw / 500));
+        ctx.beginPath();
+        ctx.arc(nose.x, nose.y, hr, 0, Math.PI * 2);
+        ctx.strokeStyle = colorFn(LM.NOSE);
+        ctx.lineWidth = Math.max(2.5, 4 * (cw / 500));
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
