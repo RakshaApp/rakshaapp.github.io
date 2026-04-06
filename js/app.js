@@ -477,21 +477,21 @@ function showPoseTutorial() {
     setText('tut-desc', pose.description);
     setText('tut-footer-desc', pose.description);
 
-    // Full-screen animated stickman
-    const c = $('#tut-canvas');
-    if (c) {
-        c.width = c.offsetWidth || 400;
-        c.height = c.offsetHeight || 600;
-        App.demoRenderers['tut']?.stop();
-        const r = new DemoRenderer(c);
-        r.start(pose.targets);
-        App.demoRenderers['tut'] = r;
+    // Load pose video
+    const vid = $('#tut-video');
+    if (vid) {
+        vid.src = `assets/${pose.id}.mp4`;
+        vid.load();
+        vid.play().catch(() => {}); // autoplay may be blocked silently
     }
 }
 
 window.goToTraining = async () => {
-    App.demoRenderers['tut']?.stop();
-    delete App.demoRenderers['tut'];
+    const vid = $('#tut-video');
+    if (vid) {
+        vid.pause();
+        vid.src = '';
+    }
     await startTrainingScreen();
 };
 
@@ -721,12 +721,11 @@ function renderPoseList() {
 window.selectPose = (idx) => {
     if (idx === App.poseIndex && !App.poseCompleted) return;
     App.poseIndex = idx;
-    const pose = currentPoses()[idx];
-    if (!pose) return;
-    setText('train-name', pose.name);
-    App.trainer?.setPose(pose);
-    resetTrainingState();
-    renderPoseList();
+    // Pause camera, go back to tutorial so the new pose's video plays first
+    App.trainer?.stopCamera();
+    App.trainerReady = false;
+    App.trainer = null;
+    showPoseTutorial();
 };
 
 // ── SUMMARY ACTIONS ───────────────────────────────────────────
@@ -764,8 +763,11 @@ window.backToDash = () => {
 };
 
 window.goBackFromTutorial = () => {
-    App.demoRenderers['tut']?.stop();
-    delete App.demoRenderers['tut'];
+    const vid = $('#tut-video');
+    if (vid) {
+        vid.pause();
+        vid.src = '';
+    }
     showDashboard();
 };
 
