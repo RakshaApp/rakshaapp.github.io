@@ -1,405 +1,446 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#c9956c">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Raksha">
-  <meta name="application-name" content="Raksha">
-  <meta name="description" content="Learn self-defense from your phone with real-time AI pose coaching.">
-  <link rel="icon" href="favicon.ico">
-  <link rel="apple-touch-icon" href="icons/logo.png">
-  <link rel="manifest" href="manifest.json">
-  <title>Raksha — Self-Defense Training</title>
-  <link rel="stylesheet" href="css/main.css">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <meta name="theme-color" content="#c9956c" />
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Raksha" />
+        <meta name="application-name" content="Raksha" />
+        <meta name="description" content="Learn self-defense from your phone with real-time AI pose coaching." />
+        <link rel="icon" href="favicon.ico" />
+        <link rel="apple-touch-icon" href="icons/logo.png" />
+        <link rel="manifest" href="manifest.json" />
+        <title>Raksha — Self-Defense Training</title>
+        <link rel="stylesheet" href="css/main.css" />
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+        <!-- Supabase -->
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
-  <!--
+        <!--
     MediaPipe Pose — load the WASM build via CDN.
     The exact pinned version avoids CDN drift / breaking changes.
   -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" crossorigin="anonymous"></script>
-</head>
-<body>
-
-<!-- ══════════════════════════════════════════
+        <script
+            src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"
+            crossorigin="anonymous"
+        ></script>
+    </head>
+    <body>
+        <!-- ══════════════════════════════════════════
      LOADING
 ══════════════════════════════════════════ -->
-<div id="loading-screen" class="screen hidden">
-  <div class="load-cover"><div class="spinner"></div></div>
-</div>
+        <div id="loading-screen" class="screen hidden">
+            <div class="load-cover"><div class="spinner"></div></div>
+        </div>
 
-<!-- ══════════════════════════════════════════
+        <!-- ══════════════════════════════════════════
      SPLASH
 ══════════════════════════════════════════ -->
-<div id="splash-screen" class="screen">
-  <div class="splash-ring"></div>
-  <div class="splash-ring"></div>
-  <div class="splash-ring"></div>
-  <div class="splash-logo">
-    <img src="icons/logo.png" alt="Raksha logo">
-  </div>
-  <div class="splash-wordmark">Raksha</div>
-  <div class="splash-tag">Self-Defense · Anywhere</div>
-</div>
+        <div id="splash-screen" class="screen">
+            <div class="splash-ring"></div>
+            <div class="splash-ring"></div>
+            <div class="splash-ring"></div>
+            <div class="splash-logo">
+                <img src="icons/logo.png" alt="Raksha logo" />
+            </div>
+            <div class="splash-wordmark">Raksha</div>
+            <div class="splash-tag">Self-Defense · Anywhere</div>
+        </div>
 
-<!-- ══════════════════════════════════════════
+        <!-- ══════════════════════════════════════════
      ONBOARDING
 ══════════════════════════════════════════ -->
-<div id="onboarding-screen" class="screen hidden">
-  <div class="ob-slides">
-    <div class="ob-slide">
-      <div class="ob-icon"><canvas id="ob-canvas-0" width="150" height="150"></canvas></div>
-      <h2 class="ob-title">Learn to Defend<br>Yourself</h2>
-      <p class="ob-desc">Raksha teaches real self-defense through interactive AI pose coaching — right from your phone.</p>
-    </div>
-    <div class="ob-slide">
-      <div class="ob-icon"><canvas id="ob-canvas-1" width="150" height="150"></canvas></div>
-      <h2 class="ob-title">Real-Time<br>Feedback</h2>
-      <p class="ob-desc">Your camera detects your body in real time and guides you with live voice cues until your form is perfect.</p>
-    </div>
-    <div class="ob-slide">
-      <div class="ob-icon"><canvas id="ob-canvas-2" width="150" height="150"></canvas></div>
-      <h2 class="ob-title">Track Your<br>Progress</h2>
-      <p class="ob-desc">Complete poses, earn marks, and build a complete self-defense repertoire at your own pace.</p>
-    </div>
-  </div>
-  <div class="ob-dots">
-    <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
-  </div>
-  <div class="ob-footer">
-    <button class="btn btn-primary btn-w" id="ob-next-btn" onclick="obNext()">Next</button>
-    <button class="btn btn-ghost btn-w" onclick="obSkip()">Skip</button>
-  </div>
-</div>
+        <div id="onboarding-screen" class="screen hidden">
+            <div class="ob-slides">
+                <div class="ob-slide">
+                    <div class="ob-icon"><canvas id="ob-canvas-0" width="150" height="150"></canvas></div>
+                    <h2 class="ob-title">Learn to Defend<br />Yourself</h2>
+                    <p class="ob-desc">
+                        Raksha teaches real self-defense through interactive AI pose coaching — right from your phone.
+                    </p>
+                </div>
+                <div class="ob-slide">
+                    <div class="ob-icon"><canvas id="ob-canvas-1" width="150" height="150"></canvas></div>
+                    <h2 class="ob-title">Real-Time<br />Feedback</h2>
+                    <p class="ob-desc">
+                        Your camera detects your body in real time and guides you with live voice cues until your form
+                        is perfect.
+                    </p>
+                </div>
+                <div class="ob-slide">
+                    <div class="ob-icon"><canvas id="ob-canvas-2" width="150" height="150"></canvas></div>
+                    <h2 class="ob-title">Track Your<br />Progress</h2>
+                    <p class="ob-desc">
+                        Complete poses, earn marks, and build a complete self-defense repertoire at your own pace.
+                    </p>
+                </div>
+            </div>
+            <div class="ob-dots">
+                <div class="dot active"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            <div class="ob-footer">
+                <button class="btn btn-primary btn-w" id="ob-next-btn" onclick="obNext()">Next</button>
+                <button class="btn btn-ghost btn-w" onclick="obSkip()">Skip</button>
+            </div>
+        </div>
 
-<!-- ══════════════════════════════════════════
+        <!-- ══════════════════════════════════════════
      AUTH
 ══════════════════════════════════════════ -->
-<div id="auth-screen" class="screen hidden">
-  <div class="auth-brand">
-    <div class="auth-logo-img"><img src="icons/logo.png" alt="Raksha"></div>
-    <h1 class="auth-title" id="auth-title">Join Raksha</h1>
-    <p class="auth-sub">Your personal self-defense coach</p>
-  </div>
-  <div class="auth-card" id="auth-card"></div>
-</div>
+        <div id="auth-screen" class="screen hidden">
+            <div class="auth-brand">
+                <div class="auth-logo-img"><img src="icons/logo.png" alt="Raksha" /></div>
+                <h1 class="auth-title" id="auth-title">Join Raksha</h1>
+                <p class="auth-sub">Your personal self-defense coach</p>
+            </div>
+            <div class="auth-card" id="auth-card"></div>
+        </div>
 
-<!-- ══════════════════════════════════════════
+        <!-- ══════════════════════════════════════════
      VERIFY EMAIL
 ══════════════════════════════════════════ -->
-<div id="verify-screen" class="screen hidden">
-  <div class="verify-icon">📬</div>
-  <h2 class="verify-title">Check your inbox</h2>
-  <p class="verify-desc">We sent you a verification link. Click it to confirm your email and start training.</p>
-  <div style="margin-top:28px;width:100%;max-width:300px;padding:0 24px">
-    <button class="btn btn-outline btn-w" onclick="showAuthScreen('login')">Back to Sign In</button>
-  </div>
-</div>
+        <div id="verify-screen" class="screen hidden">
+            <div class="verify-icon">📬</div>
+            <h2 class="verify-title">Check your inbox</h2>
+            <p class="verify-desc">
+                We sent you a verification link. Click it to confirm your email and start training.
+            </p>
+            <div style="margin-top: 28px; width: 100%; max-width: 300px; padding: 0 24px">
+                <button class="btn btn-outline btn-w" onclick="showAuthScreen('login')">Back to Sign In</button>
+            </div>
+        </div>
 
-<!-- ══════════════════════════════════════════
+        <!-- ══════════════════════════════════════════
      CALIBRATION (one-time)
 ══════════════════════════════════════════ -->
-<div id="calibration-screen" class="screen hidden">
-  <div class="cal-hero">
-    <div class="cal-logo"><img src="icons/logo.png" alt="Raksha"></div>
-    <h2>Phone Setup</h2>
-    <p>One-time calibration for best results</p>
-  </div>
-  <div class="cal-steps">
-    <div class="cal-step">
-      <div class="cal-num">1</div>
-      <div>
-        <h4>Place your phone upright</h4>
-        <p>Prop it against a wall or use a stand at chest height so it won't fall.</p>
-      </div>
-    </div>
-    <div class="cal-step">
-      <div class="cal-num">2</div>
-      <div>
-        <h4>Stand 6–8 feet away</h4>
-        <p>Your full body from head to feet should be visible in the camera frame.</p>
-      </div>
-    </div>
-    <div class="cal-step">
-      <div class="cal-num">3</div>
-      <div>
-        <h4>Ensure good lighting</h4>
-        <p>Face a window or light source. Avoid bright lights directly behind you.</p>
-      </div>
-    </div>
-    <div class="cal-step">
-      <div class="cal-num">4</div>
-      <div>
-        <h4>Wear fitted clothing</h4>
-        <p>Fitted athletic wear gives the best pose detection accuracy.</p>
-      </div>
-    </div>
-  </div>
-  <div class="cal-footer">
-    <button class="btn btn-primary btn-w" onclick="finishCalibration()">I'm Ready — Start Training</button>
-  </div>
-</div>
+        <div id="calibration-screen" class="screen hidden">
+            <div class="cal-hero">
+                <div class="cal-logo"><img src="icons/logo.png" alt="Raksha" /></div>
+                <h2>Phone Setup</h2>
+                <p>One-time calibration for best results</p>
+            </div>
+            <div class="cal-steps">
+                <div class="cal-step">
+                    <div class="cal-num">1</div>
+                    <div>
+                        <h4>Place your phone upright</h4>
+                        <p>Prop it against a wall or use a stand at chest height so it won't fall.</p>
+                    </div>
+                </div>
+                <div class="cal-step">
+                    <div class="cal-num">2</div>
+                    <div>
+                        <h4>Stand 6–8 feet away</h4>
+                        <p>Your full body from head to feet should be visible in the camera frame.</p>
+                    </div>
+                </div>
+                <div class="cal-step">
+                    <div class="cal-num">3</div>
+                    <div>
+                        <h4>Ensure good lighting</h4>
+                        <p>Face a window or light source. Avoid bright lights directly behind you.</p>
+                    </div>
+                </div>
+                <div class="cal-step">
+                    <div class="cal-num">4</div>
+                    <div>
+                        <h4>Wear fitted clothing</h4>
+                        <p>Fitted athletic wear gives the best pose detection accuracy.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="cal-footer">
+                <button class="btn btn-primary btn-w" onclick="finishCalibration()">I'm Ready — Start Training</button>
+            </div>
+        </div>
 
-<!-- ══════════════════════════════════════════
+        <!-- ══════════════════════════════════════════
      DASHBOARD
 ══════════════════════════════════════════ -->
-<div id="dashboard-screen" class="screen hidden">
-  <div class="dash-hero">
-    <div class="dash-top">
-      <div>
-        <div class="dash-greet">Welcome back,</div>
-        <div class="dash-name" id="dash-name">Warrior</div>
-      </div>
-      <div class="dash-av" id="dash-av">W</div>
-    </div>
-    <div class="dash-chips">
-      <div class="stat-chip">
-        <div class="v" id="stat-done">0</div>
-        <div class="l">Poses Done</div>
-      </div>
-      <div class="stat-chip">
-        <div class="v" id="stat-total">8</div>
-        <div class="l">Total Poses</div>
-      </div>
-    </div>
-  </div>
+        <div id="dashboard-screen" class="screen hidden">
+            <div class="dash-hero">
+                <div class="dash-top">
+                    <div>
+                        <div class="dash-greet">Welcome back,</div>
+                        <div class="dash-name" id="dash-name">Warrior</div>
+                    </div>
+                    <div class="dash-av" id="dash-av">W</div>
+                </div>
+                <div class="dash-chips">
+                    <div class="stat-chip">
+                        <div class="v" id="stat-done">0</div>
+                        <div class="l">Poses Done</div>
+                    </div>
+                    <div class="stat-chip">
+                        <div class="v" id="stat-total">8</div>
+                        <div class="l">Total Poses</div>
+                    </div>
+                </div>
+            </div>
 
-  <div class="dash-body">
-    <h2 class="sec-title">Choose Your Training</h2>
-    <div class="mode-grid">
-      <div class="mode-card" onclick="startMode('defense')">
-        <canvas id="def-card-canvas"></canvas>
-        <div class="mode-card-info">
-          <h3>Defense</h3>
-          <p>4 techniques</p>
+            <div class="dash-body">
+                <h2 class="sec-title">Choose Your Training</h2>
+                <div class="mode-grid">
+                    <div class="mode-card" onclick="startMode('defense')">
+                        <canvas id="def-card-canvas"></canvas>
+                        <div class="mode-card-info">
+                            <h3>Defense</h3>
+                            <p>4 techniques</p>
+                        </div>
+                    </div>
+                    <div class="mode-card" onclick="startMode('attack')">
+                        <canvas id="atk-card-canvas"></canvas>
+                        <div class="mode-card-info">
+                            <h3>Attack</h3>
+                            <p>4 techniques</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="sec-title">Progress</h2>
+                <div class="prog-card">
+                    <div class="prog-head">
+                        <span>🛡 Defense</span>
+                        <strong id="def-label">0/4</strong>
+                    </div>
+                    <div class="prog-track"><div class="prog-fill" id="def-bar" style="width: 0%"></div></div>
+                </div>
+                <div class="prog-card">
+                    <div class="prog-head">
+                        <span>⚡ Attack</span>
+                        <strong id="atk-label">0/4</strong>
+                    </div>
+                    <div class="prog-track"><div class="prog-fill" id="atk-bar" style="width: 0%"></div></div>
+                </div>
+            </div>
+
+            <nav class="bottom-nav">
+                <button class="nav-item active" onclick="navHome()">
+                    <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
+                </button>
+                <button class="nav-item" onclick="navTrain()">
+                    <span class="nav-icon">🥋</span><span class="nav-label">Train</span>
+                </button>
+                <button class="nav-item" onclick="navProfile()">
+                    <span class="nav-icon">👤</span><span class="nav-label">Profile</span>
+                </button>
+            </nav>
         </div>
-      </div>
-      <div class="mode-card" onclick="startMode('attack')">
-        <canvas id="atk-card-canvas"></canvas>
-        <div class="mode-card-info">
-          <h3>Attack</h3>
-          <p>4 techniques</p>
-        </div>
-      </div>
-    </div>
 
-    <h2 class="sec-title">Progress</h2>
-    <div class="prog-card">
-      <div class="prog-head">
-        <span>🛡 Defense</span>
-        <strong id="def-label">0/4</strong>
-      </div>
-      <div class="prog-track"><div class="prog-fill" id="def-bar" style="width:0%"></div></div>
-    </div>
-    <div class="prog-card">
-      <div class="prog-head">
-        <span>⚡ Attack</span>
-        <strong id="atk-label">0/4</strong>
-      </div>
-      <div class="prog-track"><div class="prog-fill" id="atk-bar" style="width:0%"></div></div>
-    </div>
-  </div>
-
-  <nav class="bottom-nav">
-    <button class="nav-item active" onclick="navHome()">
-      <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
-    </button>
-    <button class="nav-item" onclick="navTrain()">
-      <span class="nav-icon">🥋</span><span class="nav-label">Train</span>
-    </button>
-    <button class="nav-item" onclick="navProfile()">
-      <span class="nav-icon">👤</span><span class="nav-label">Profile</span>
-    </button>
-  </nav>
-</div>
-
-<!-- ══════════════════════════════════════════
+        <!-- ══════════════════════════════════════════
      POSE TUTORIAL (full-screen animated demo)
 ══════════════════════════════════════════ -->
-<div id="pose-tutorial-screen" class="screen hidden" style="position:fixed;inset:0;background:#0f0a08;overflow:hidden">
-  <!-- Full-screen canvas -->
-  <div class="tut-canvas-area">
-    <canvas id="tut-canvas" style="width:100%;height:100%"></canvas>
-  </div>
+        <div
+            id="pose-tutorial-screen"
+            class="screen hidden"
+            style="position: fixed; inset: 0; background: #0f0a08; overflow: hidden"
+        >
+            <!-- Full-screen canvas -->
+            <div class="tut-canvas-area">
+                <canvas id="tut-canvas" style="width: 100%; height: 100%"></canvas>
+            </div>
 
-  <!-- Header overlay -->
-  <div class="tut-header">
-    <button class="back-btn" onclick="goBackFromTutorial()">←</button>
-    <div class="tut-info">
-      <div class="tut-badge" id="tut-badge">Defense</div>
-      <div class="tut-name"  id="tut-name">Guard Stance</div>
-      <div class="tut-desc-h" id="tut-desc"></div>
-    </div>
-  </div>
+            <!-- Header overlay -->
+            <div class="tut-header">
+                <button class="back-btn" onclick="goBackFromTutorial()">←</button>
+                <div class="tut-info">
+                    <div class="tut-badge" id="tut-badge">Defense</div>
+                    <div class="tut-name" id="tut-name">Guard Stance</div>
+                    <div class="tut-desc-h" id="tut-desc"></div>
+                </div>
+            </div>
 
-  <!-- Animated label -->
-  <div class="tut-anim-badge">Animated Demo — Study this pose</div>
+            <!-- Animated label -->
+            <div class="tut-anim-badge">Animated Demo — Study this pose</div>
 
-  <!-- Footer -->
-  <div class="tut-footer">
-    <div class="tut-footer-desc" id="tut-footer-desc"></div>
-    <button class="btn btn-primary btn-w" onclick="goToTraining()">
-      Start with Camera →
-    </button>
-  </div>
-</div>
+            <!-- Footer -->
+            <div class="tut-footer">
+                <div class="tut-footer-desc" id="tut-footer-desc"></div>
+                <button class="btn btn-primary btn-w" onclick="goToTraining()">Start with Camera →</button>
+            </div>
+        </div>
 
-<!-- ══════════════════════════════════════════
+        <!-- ══════════════════════════════════════════
      TRAINING (full-screen camera + overlay)
 ══════════════════════════════════════════ -->
-<div id="training-screen" class="screen hidden" style="position:fixed;inset:0;background:#0f0a08;overflow:hidden">
+        <div
+            id="training-screen"
+            class="screen hidden"
+            style="position: fixed; inset: 0; background: #0f0a08; overflow: hidden"
+        >
+            <!-- Full-screen camera wrap -->
+            <div class="camera-wrap" style="position: absolute; inset: 0">
+                <video id="cam-video" class="camera-video" playsinline muted autoplay></video>
+                <canvas id="cam-overlay" class="overlay-canvas"></canvas>
 
-  <!-- Full-screen camera wrap -->
-  <div class="camera-wrap" style="position:absolute;inset:0">
-    <video id="cam-video" class="camera-video" playsinline muted autoplay></video>
-    <canvas id="cam-overlay" class="overlay-canvas"></canvas>
+                <!-- Accuracy ring -->
+                <div class="acc-ring">
+                    <svg viewBox="0 0 64 64">
+                        <circle class="ring-bg" cx="32" cy="32" r="26" />
+                        <circle
+                            class="ring-fill"
+                            id="acc-ring-fill"
+                            cx="32"
+                            cy="32"
+                            r="26"
+                            stroke-dasharray="163"
+                            stroke-dashoffset="163"
+                            stroke="#c05050"
+                        />
+                    </svg>
+                    <div class="acc-ring-val" id="acc-ring-val">0%</div>
+                </div>
 
-    <!-- Accuracy ring -->
-    <div class="acc-ring">
-      <svg viewBox="0 0 64 64">
-        <circle class="ring-bg"   cx="32" cy="32" r="26"/>
-        <circle class="ring-fill" id="acc-ring-fill" cx="32" cy="32" r="26"
-          stroke-dasharray="163" stroke-dashoffset="163" stroke="#c05050"/>
-      </svg>
-      <div class="acc-ring-val" id="acc-ring-val">0%</div>
-    </div>
+                <!-- Hold bar -->
+                <div class="hold-bar" id="hold-bar">
+                    <div class="hold-bar-label">🔒 Hold it!</div>
+                    <div class="hold-bar-track">
+                        <div class="hold-bar-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="hold-bar-secs">5.0s remaining</div>
+                </div>
 
-    <!-- Hold bar -->
-    <div class="hold-bar" id="hold-bar">
-      <div class="hold-bar-label">🔒 Hold it!</div>
-      <div class="hold-bar-track">
-        <div class="hold-bar-fill" style="width:0%"></div>
-      </div>
-      <div class="hold-bar-secs">5.0s remaining</div>
-    </div>
+                <!-- Pose scroll list -->
+                <div class="pose-scroll-wrap">
+                    <div class="pose-scroll-list" id="pose-list"></div>
+                </div>
 
-    <!-- Pose scroll list -->
-    <div class="pose-scroll-wrap">
-      <div class="pose-scroll-list" id="pose-list"></div>
-    </div>
+                <!-- Feedback bar -->
+                <div class="feedback-strip">
+                    <span class="feedback-text" id="feedback-text">Step into frame and face the camera</span>
+                </div>
 
-    <!-- Feedback bar -->
-    <div class="feedback-strip">
-      <span class="feedback-text" id="feedback-text">Step into frame and face the camera</span>
-    </div>
+                <!-- SUMMARY OVERLAY -->
+                <div class="summary-overlay" id="summary-overlay">
+                    <div class="sum-top">
+                        <div class="sum-icon">✓</div>
+                        <div class="sum-title">Pose Complete!</div>
+                        <div class="sum-acc"></div>
+                    </div>
 
-    <!-- SUMMARY OVERLAY -->
-    <div class="summary-overlay" id="summary-overlay">
-      <div class="sum-top">
-        <div class="sum-icon">✓</div>
-        <div class="sum-title">Pose Complete!</div>
-        <div class="sum-acc"></div>
-      </div>
+                    <div class="sum-table-wrap">
+                        <table class="sum-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>At</th>
+                                    <th>Feedback Given</th>
+                                    <th>Result</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sum-log-body"></tbody>
+                        </table>
+                    </div>
 
-      <div class="sum-table-wrap">
-        <table class="sum-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>At</th>
-              <th>Feedback Given</th>
-              <th>Result</th>
-            </tr>
-          </thead>
-          <tbody id="sum-log-body"></tbody>
-        </table>
-      </div>
+                    <div class="sum-actions">
+                        <button class="btn btn-primary btn-w" onclick="nextPoseFromSummary()">Next Pose →</button>
+                        <button class="btn btn-dark btn-w" onclick="retryPose()">Practice Again</button>
+                        <button
+                            class="btn btn-ghost btn-w"
+                            style="color: rgba(255, 255, 255, 0.5)"
+                            onclick="backToDash()"
+                        >
+                            Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-      <div class="sum-actions">
-        <button class="btn btn-primary btn-w" onclick="nextPoseFromSummary()">Next Pose →</button>
-        <button class="btn btn-dark btn-w" onclick="retryPose()">Practice Again</button>
-        <button class="btn btn-ghost btn-w" style="color:rgba(255,255,255,.5)" onclick="backToDash()">Dashboard</button>
-      </div>
-    </div>
-  </div>
+            <!-- Header (floating, over camera) -->
+            <div class="train-header">
+                <button class="back-btn" onclick="backToDash()">←</button>
+                <div class="train-info">
+                    <div class="train-mode" id="train-mode">Defense</div>
+                    <div class="train-name" id="train-name">Guard Stance</div>
+                </div>
+            </div>
+        </div>
 
-  <!-- Header (floating, over camera) -->
-  <div class="train-header">
-    <button class="back-btn" onclick="backToDash()">←</button>
-    <div class="train-info">
-      <div class="train-mode" id="train-mode">Defense</div>
-      <div class="train-name" id="train-name">Guard Stance</div>
-    </div>
-  </div>
-
-</div>
-
-<!-- ══════════════════════════════════════════
+        <!-- ══════════════════════════════════════════
      PROFILE
 ══════════════════════════════════════════ -->
-<div id="profile-screen" class="screen hidden">
-  <div class="prof-head">
-    <div class="prof-av-lg" id="prof-av">W</div>
-    <div class="prof-name" id="prof-name">Warrior</div>
-    <div class="prof-email" id="prof-email">—</div>
-  </div>
+        <div id="profile-screen" class="screen hidden">
+            <div class="prof-head">
+                <div class="prof-av-lg" id="prof-av">W</div>
+                <div class="prof-name" id="prof-name">Warrior</div>
+                <div class="prof-email" id="prof-email">—</div>
+            </div>
 
-  <div class="prof-card">
-    <h4>Your Stats</h4>
-    <div class="stat-grid">
-      <div class="stat-box"><span class="n" id="ps-completed">0</span><span class="l">Poses Completed</span></div>
-      <div class="stat-box"><span class="n" id="ps-avg">—</span><span class="l">Avg Best Accuracy</span></div>
-      <div class="stat-box"><span class="n" id="ps-def">0</span><span class="l">Defense Done</span></div>
-      <div class="stat-box"><span class="n" id="ps-atk">0</span><span class="l">Attack Done</span></div>
-    </div>
-  </div>
+            <div class="prof-card">
+                <h4>Your Stats</h4>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <span class="n" id="ps-completed">0</span><span class="l">Poses Completed</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="n" id="ps-avg">—</span><span class="l">Avg Best Accuracy</span>
+                    </div>
+                    <div class="stat-box"><span class="n" id="ps-def">0</span><span class="l">Defense Done</span></div>
+                    <div class="stat-box"><span class="n" id="ps-atk">0</span><span class="l">Attack Done</span></div>
+                </div>
+            </div>
 
-  <div class="prof-card">
-    <h4>Settings</h4>
-    <div class="toggle-row">
-      <span>Audio Feedback</span>
-      <label class="tog">
-        <input type="checkbox" checked id="tts-toggle" onchange="tts.setEnabled(this.checked)">
-        <span class="tog-knob"></span>
-      </label>
-    </div>
-    <div class="divider"></div>
-    <button class="btn btn-outline btn-w" style="margin-top:8px" onclick="doSignOut()">Sign Out</button>
-  </div>
+            <div class="prof-card">
+                <h4>Settings</h4>
+                <div class="toggle-row">
+                    <span>Audio Feedback</span>
+                    <label class="tog">
+                        <input type="checkbox" checked id="tts-toggle" onchange="tts.setEnabled(this.checked)" />
+                        <span class="tog-knob"></span>
+                    </label>
+                </div>
+                <div class="divider"></div>
+                <button class="btn btn-outline btn-w" style="margin-top: 8px" onclick="doSignOut()">Sign Out</button>
+            </div>
 
-  <nav class="bottom-nav">
-    <button class="nav-item" onclick="navHome()">
-      <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
-    </button>
-    <button class="nav-item" onclick="navTrain()">
-      <span class="nav-icon">🥋</span><span class="nav-label">Train</span>
-    </button>
-    <button class="nav-item active" onclick="navProfile()">
-      <span class="nav-icon">👤</span><span class="nav-label">Profile</span>
-    </button>
-  </nav>
-</div>
+            <nav class="bottom-nav">
+                <button class="nav-item" onclick="navHome()">
+                    <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
+                </button>
+                <button class="nav-item" onclick="navTrain()">
+                    <span class="nav-icon">🥋</span><span class="nav-label">Train</span>
+                </button>
+                <button class="nav-item active" onclick="navProfile()">
+                    <span class="nav-icon">👤</span><span class="nav-label">Profile</span>
+                </button>
+            </nav>
+        </div>
 
-<!-- PWA BANNER -->
-<div class="pwa-banner" id="pwa-banner">
-  <div class="pwa-b-icon"><img src="icons/logo.png" alt="Raksha"></div>
-  <div class="pwa-b-text">
-    <strong>Install Raksha</strong>
-    <span>Add to home screen for instant access</span>
-  </div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <button class="btn btn-primary" style="padding:9px 16px;font-size:.82rem;border-radius:10px" onclick="installPWA()">Install</button>
-    <button class="pwa-close" onclick="dismissPWA()">✕</button>
-  </div>
-</div>
+        <!-- PWA BANNER -->
+        <div class="pwa-banner" id="pwa-banner">
+            <div class="pwa-b-icon"><img src="icons/logo.png" alt="Raksha" /></div>
+            <div class="pwa-b-text">
+                <strong>Install Raksha</strong>
+                <span>Add to home screen for instant access</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center">
+                <button
+                    class="btn btn-primary"
+                    style="padding: 9px 16px; font-size: 0.82rem; border-radius: 10px"
+                    onclick="installPWA()"
+                >
+                    Install
+                </button>
+                <button class="pwa-close" onclick="dismissPWA()">✕</button>
+            </div>
+        </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+        <!-- TOAST -->
+        <div class="toast" id="toast"></div>
 
-<!-- ══════════════════════════════════════════
+        <!-- ══════════════════════════════════════════
      SCRIPTS — order matters
 ══════════════════════════════════════════ -->
-<script src="js/supabase-client.js"></script>
-<script src="js/poses.js"></script>
-<script src="js/stickman.js"></script>
-<script src="js/tts.js"></script>
-<script src="js/trainer.js"></script>
-<script src="js/app.js"></script>
-
-</body>
+        <script src="js/supabase-client.js"></script>
+        <script src="js/stickman.js"></script>
+        <script src="js/poses.js"></script>
+        <script src="js/tts.js"></script>
+        <script src="js/trainer.js"></script>
+        <script src="js/app.js"></script>
+    </body>
 </html>

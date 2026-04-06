@@ -10,7 +10,7 @@ const SUPABASE_ANON_KEY =
 // ============================================================
 // Supabase Client (CDN version, loaded in index.html)
 // ============================================================
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
         persistSession: true,
         storageKey: 'raksha_session',
@@ -41,7 +41,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 // Auth helpers
 // ============================================================
 async function signUp(name, email, password) {
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
@@ -55,7 +55,7 @@ async function signUp(name, email, password) {
     if (error) throw error;
     if (data.user) {
         // Insert profile row (RLS: user can only insert their own row)
-        await supabase.from('profiles').upsert({
+        await supabaseClient.from('profiles').upsert({
             id: data.user.id,
             full_name: name,
             email: email,
@@ -65,13 +65,13 @@ async function signUp(name, email, password) {
 }
 
 async function signIn(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data;
 }
 
 async function signOut() {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
     localStorage.removeItem('raksha_session');
     localStorage.removeItem('raksha_user');
 }
@@ -79,14 +79,14 @@ async function signOut() {
 async function getSession() {
     const {
         data: { session },
-    } = await supabase.auth.getSession();
+    } = await supabaseClient.auth.getSession();
     return session;
 }
 
 async function getUser() {
     const {
         data: { user },
-    } = await supabase.auth.getUser();
+    } = await supabaseClient.auth.getUser();
     return user;
 }
 
@@ -94,14 +94,14 @@ async function getUser() {
 // Progress helpers
 // ============================================================
 async function loadProgress(userId) {
-    const { data, error } = await supabase.from('pose_progress').select('*').eq('user_id', userId);
+    const { data, error } = await supabaseClient.from('pose_progress').select('*').eq('user_id', userId);
     if (error) return [];
     return data;
 }
 
 async function saveProgress(userId, poseId, accuracy, completed, holdAccuracy) {
     // Upsert: one row per user+pose
-    const { error } = await supabase.from('pose_progress').upsert(
+    const { error } = await supabaseClient.from('pose_progress').upsert(
         {
             user_id: userId,
             pose_id: poseId,
