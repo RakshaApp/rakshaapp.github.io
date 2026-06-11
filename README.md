@@ -2,7 +2,7 @@
 
 AI-powered self defense training for everyone
 
-## Live Demo
+## Live Website
 
 [Visit Website](https://rakshaapp.github.io)
 
