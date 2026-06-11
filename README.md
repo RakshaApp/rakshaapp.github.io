@@ -1,112 +1,42 @@
-# Raksha — Self-Defense Training PWA
+# Raksha
 
-A mobile-first Progressive Web App for self-defense training with real-time pose detection.
+AI-powered self defense training for everyone
 
----
+## Live Demo
 
-## 🚀 Quick Setup
+[Visit Website](https://rakshaapp.github.io)
 
-### 1. Supabase Configuration
+## Overview
 
-**A. Create a Supabase project** at https://supabase.com
+Raksha aims to make physical self-defense training accessible to everyone through AI-powered pose detection and audiovisual feedback. 
 
-**B. Run the schema:**
-- Go to your project → SQL Editor → New Query
-- Paste the contents of `supabase-schema.sql` and run it
+## Features
 
-**C. Set your redirect URL:**
-- Authentication → URL Configuration
-- **Site URL:** `https://yourusername.github.io/your-repo/`
-- **Redirect URLs:** Add the same URL
+- Pose detection using MediaPipe
+- Audio feedback based on accuracy
+- Video integration for learning
 
-**D. Get your project credentials:**
-- Settings → API
-- Copy "Project URL" and "anon public" key
+## Technologies
 
-### 2. Add Your Supabase Credentials
+- HTML
+- CSS
+- JavaScript
+- MediaPipe
+- Supabase
 
-Open `js/supabase-client.js` and replace:
+## Screenshots
 
-```js
-const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';   // ← your URL
-const SUPABASE_ANON_KEY = 'YOUR_ANON_PUBLIC_KEY';             // ← your anon key
-```
+![Homepage](.github/Raksha.jpeg)
 
-### 3. Generate PWA Icons
+## Future Improvements
 
-The app needs 192×192 and 512×512 PNG icons. Generate them from `icons/logo.png`:
+- Needs accuracy improvement
+- Better UI and UX
 
-```bash
-# Using ImageMagick (if installed):
-convert icons/logo.png -resize 192x192 icons/icon-192.png
-convert icons/logo.png -resize 512x512 icons/icon-512.png
-```
+## Status
 
-Or use an online tool like https://realfavicongenerator.net
-
-### 4. Deploy to GitHub Pages
-
-```bash
-git init
-git add .
-git commit -m "Initial Raksha deployment"
-git remote add origin https://github.com/yourusername/your-repo.git
-git push -u origin main
-```
-
-Then in GitHub repo → Settings → Pages → Source: Deploy from branch `main`, folder `/`.
+Work in Progress
 
 ---
 
-## 📁 File Structure
-
-```
-raksha/
-├── index.html              # Main app (single page)
-├── manifest.json           # PWA manifest
-├── sw.js                   # Service worker
-├── favicon.ico             # App icon
-├── css/
-│   └── main.css            # All styles (rose-gold luxury theme)
-├── js/
-│   ├── supabase-client.js  # ← ADD YOUR CREDENTIALS HERE
-│   ├── poses.js            # Pose definitions + landmark targets
-│   ├── stickman.js         # Canvas stickman renderer
-│   ├── tts.js              # Text-to-speech wrapper
-│   ├── trainer.js          # MediaPipe pose trainer + accuracy logic
-│   └── app.js              # Main app logic + screen management
-├── icons/
-│   ├── logo.png            # App logo
-│   ├── icon-192.png        # PWA icon (generate this)
-│   └── icon-512.png        # PWA icon (generate this)
-└── supabase-schema.sql     # Database schema + RLS policies
-```
-
----
-
-## 🔐 Credential Storage
-
-Credentials are stored in `localStorage` with XOR obfuscation (not cryptographic encryption). This is standard practice for web PWAs — the session token from Supabase is what's primarily used for auth, with the stored credentials only used to re-authenticate if the session expires.
-
-For additional security, consider:
-- Enabling Supabase's "Refresh token rotation"
-- Setting shorter JWT expiry in Supabase Auth settings
-
----
-
-## 🎯 Poses Included
-
-**Defense:** Guard Stance, Palm Block, Wrist Escape, Low Guard  
-**Attack:** Straight Jab, Palm Strike, Knee Strike, Elbow Strike
-
----
-
-## 🛠 Tech Stack
-
-- **Frontend:** Vanilla HTML5, CSS3, JavaScript (ES2020+)
-- **Pose Detection:** MediaPipe Pose (via CDN)
-- **Stickman Rendering:** Canvas 2D API
-- **Audio Feedback:** Web Speech API (SpeechSynthesis)
-- **Database & Auth:** Supabase (free tier)
-- **PWA:** Service Worker + Web App Manifest
-- **Hosting:** GitHub Pages (free)
+Created by [rishitc17](https://github.com/rishitc17)
